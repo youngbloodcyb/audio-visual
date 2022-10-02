@@ -1,5 +1,5 @@
 // import * as THREE from '/Users/youngbloodcyb/Projects/audio-visual/node_modules/three/build/three.module.js';
-import THREE from "three";
+import * as THREE from "three";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { vertexShader, fragmentShader } from "./lib/Shaders";
 
