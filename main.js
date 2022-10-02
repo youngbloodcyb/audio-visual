@@ -1,5 +1,15 @@
 import * as THREE from '/Users/youngbloodcyb/Projects/audio-visual/node_modules/three/build/three.module.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { vertexShader, fragmentShader } from "./lib/Shaders";
+
+const audioContext = new window.AudioContext();
+const audioElement = document.getElementById("audio");
+const analyzer = audioContext.createAnalyser();
+const source = audioContext.createMediaElementSource(audioElement);
+source.connect(analyzer);
+analyzer.connect(audioContext.destination);
+analyzer.fftSize = 1024;
+const dataArray = new Uint8Array(analyzer.frequencyBinCount);
 
 const scene = new THREE.Scene();
 
@@ -15,11 +25,42 @@ document.body.appendChild(renderer.domElement)
 
 new OrbitControls(camera, renderer.domElement);
 
+const uniforms = {
+    u_time: {
+      type: "vec3",
+      value: 2.0,
+    },
+    u_amplitude: {
+      type: "vec3",
+      value: 6.0,
+    },
+    u_data_arr: {
+      type: "float[64]",
+      value: dataArray,
+    },
+    // u_black: { type: "vec3", value: new THREE.Color(0x000000) },
+    // u_white: { type: "vec3", value: new THREE.Color(0xffffff) },
+  };
+
 const planeGeometry = new THREE.PlaneGeometry(64, 64, 64 , 64);
-const planeMaterial = new THREE.MeshNormalMaterial({ 
+// const planeMaterial = new THREE.MeshNormalMaterial({ 
+//     color: 0x00ff00,
+//     wireframe: true,
+// });
+
+const planeMaterial = new THREE.ShaderMaterial({
+    uniforms: uniforms, // dataArray , time
     // color: 0x00ff00,
-    wireframe: true 
+    vertexShader: vertexShader(),
+    fragmentShader: fragmentShader(),
+    wireframe: true,
 });
+
+// void main() {
+//     gl_position = projectionMatrix
+//         * modelViewMatrix
+//         * vec4(position.x, position.y, position.z, 1.0)
+// }
 
 const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
 planeMesh.rotateX = -Math.PI / 2 + Math.PI / 4;
@@ -74,15 +115,6 @@ animate();
 //       widget.play();
 //     });
 //   }());
-
-const audioContext = new window.AudioContext();
-const audioElement = document.getElementById("audio");
-const analyzer = audioContext.createAnalyser();
-const source = audioContext.createMediaElementSource(audioElement);
-source.connect(analyzer);
-analyzer.connect(audioContext.destination);
-analyzer.fftSize = 1024;
-const dataArray = new Uint8Array(analyzer.frequencyBinCount);
 
 const render = () => {
     analyzer.getByteFrequencyData(dataArray);
